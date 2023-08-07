@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "b3-portfolio-optimization"
+version = "0.1.0"
+description = ""
+authors = ["Aldo Monteiro <aldo.fsmonteiro@gmail.com>"]
+readme = "README.md"
+packages = [{include = "b3_portfolio_optimization"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pymoo = "^0.6.0.1"
+numpy = "^1.25.2"
+pandas = "^2.0.3"
+tqdm = "^4.65.0"
+
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
