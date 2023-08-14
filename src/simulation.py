@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from src.optimization import PortfolioProblem, PortfolioRepair
-
+from sklearn.covariance import LedoitWolf
 
 class Simulation:
     def __init__(
@@ -16,6 +16,7 @@ class Simulation:
         rebalancing_interval=None,
         relocation_interval=None,
         initial_target_allocation=None,
+        covariance_matrix_estimator='sample',
     ):
         self.dataset = dataset.sort_values('date')
         self.start_date = start_date
@@ -24,22 +25,31 @@ class Simulation:
         self.rebalancing_interval = rebalancing_interval
         self.relocation_interval = relocation_interval
         self.initial_target_allocation = initial_target_allocation
+        self.covariance_matrix_estimator = covariance_matrix_estimator
         pivot = pd.pivot_table(
-            self.dataset,
+            self.dataset.assign(
+                date=pd.to_datetime(self.dataset.date)
+            ),
             values='return',
             index=['date'],
             columns=['ticker']
         ).sort_index()
-        pivot = pivot.assign(date=pd.to_datetime(pivot.index))
         self.pivot = pivot
-        self.tickers = pivot.drop(columns='date').columns
+        self.tickers = pivot.columns
         self.history = []
+
+    def calculate_covariance_matrix(self, data):
+        if self.covariance_matrix_estimator == 'sample':
+            return data.cov(numeric_only=True).values
+        if self.covariance_matrix_estimator == 'sklearn.LedoitWolf':
+            return LedoitWolf().fit(data.values).covariance_
+        raise NotImplementedError()
 
     def optimize_portfolio(self, current_date, prices, amount):
         sliced = self.pivot.loc[:current_date].iloc[-self.window_size-1:-1]
         assert len(sliced) == self.window_size
         mu = sliced.mean(numeric_only=True).values
-        cov = sliced.cov(numeric_only=True).values
+        cov = self.calculate_covariance_matrix(sliced)
 
         problem = PortfolioProblem(mu, cov)
         algorithm = SMSEMOA(repair=PortfolioRepair(prices, amount))
