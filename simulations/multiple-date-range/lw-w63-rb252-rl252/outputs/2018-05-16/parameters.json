@@ -1,0 +1,1 @@
+{"start_date": "2018-05-16", "initial_amount": 5000, "window_size": 63, "rebalancing_interval": 252, "relocation_interval": 252, "covariance_matrix_estimator": "sklearn.LedoitWolf"}
